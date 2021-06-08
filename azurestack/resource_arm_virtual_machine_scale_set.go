@@ -1592,14 +1592,18 @@ func expandAzureRmVirtualMachineScaleSetStorageProfileImageReference(d *schema.R
 		return nil, fmt.Errorf("[ERROR] Conflict between `id` and `publisher` (only one or the other can be used)")
 	}
 
-	offer := storageImageRef["offer"].(string)
-	sku := storageImageRef["sku"].(string)
-	version := storageImageRef["version"].(string)
+	if imageID != "" {
+		imageReference.ID = utils.String(storageImageRef["id"].(string))
+	} else {
+		offer := storageImageRef["offer"].(string)
+		sku := storageImageRef["sku"].(string)
+		version := storageImageRef["version"].(string)
 
-	imageReference.Publisher = utils.String(publisher)
-	imageReference.Offer = utils.String(offer)
-	imageReference.Sku = utils.String(sku)
-	imageReference.Version = utils.String(version)
+		imageReference.Publisher = utils.String(publisher)
+		imageReference.Offer = utils.String(offer)
+		imageReference.Sku = utils.String(sku)
+		imageReference.Version = utils.String(version)
+	}
 
 	return &imageReference, nil
 }
