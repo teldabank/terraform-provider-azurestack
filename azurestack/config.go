@@ -13,6 +13,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/storage/mgmt/storage"
 	"github.com/Azure/azure-sdk-for-go/services/dns/mgmt/2016-04-01/dns"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	keyvaultdata "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
+	keyvaultmgmt "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2019-09-01/keyvault"
 	mainStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -34,6 +36,9 @@ type ArmClient struct {
 	skipProviderRegistration bool
 
 	StopContext context.Context
+
+	// Key Vault
+	keyVault *keyVaultClient
 
 	// Authentication
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
@@ -147,6 +152,12 @@ func getArmClient(authCfg *authentication.Config, tfVersion string, skipProvider
 	client.registerNetworkingClients(endpoint, client.subscriptionId, auth)
 	client.registerResourcesClients(endpoint, client.subscriptionId, auth)
 	client.registerStorageClients(endpoint, client.subscriptionId, auth)
+
+	// The Key Vault data plane authenticates against the vault's own endpoint, which
+	// is only known per-request, so it uses a per-request authorizer callback rather
+	// than a single token for the resource manager audience.
+	keyVaultAuth := authCfg.BearerAuthorizerCallback(sender, oauth)
+	client.registerKeyVaultClients(endpoint, client.subscriptionId, auth, keyVaultAuth)
 
 	return &client, nil
 }
@@ -268,6 +279,19 @@ func (c *ArmClient) registerStorageClients(endpoint, subscriptionId string, auth
 	accountsClient := storage.NewAccountsClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&accountsClient.Client, auth)
 	c.storageServiceClient = accountsClient
+}
+
+func (c *ArmClient) registerKeyVaultClients(endpoint, subscriptionId string, auth, keyVaultAuth autorest.Authorizer) {
+	vaultsClient := keyvaultmgmt.NewVaultsClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&vaultsClient.Client, auth)
+
+	managementClient := keyvaultdata.New()
+	c.configureClient(&managementClient.Client, keyVaultAuth)
+
+	c.keyVault = &keyVaultClient{
+		VaultsClient:     &vaultsClient,
+		ManagementClient: &managementClient,
+	}
 }
 
 var (
