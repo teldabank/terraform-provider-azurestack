@@ -2,8 +2,12 @@ package azurestack
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,8 +17,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/storage/mgmt/storage"
 	"github.com/Azure/azure-sdk-for-go/services/dns/mgmt/2016-04-01/dns"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	keyvaultdata "github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
+	keyvaultmgmt "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2019-09-01/keyvault"
 	mainStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/sender"
@@ -28,12 +35,16 @@ type ArmClient struct {
 	clientId                 string
 	tenantId                 string
 	subscriptionId           string
+	authenticatedObjectId    string
 	terraformVersion         string
 	usingServicePrincipal    bool
 	environment              azure.Environment
 	skipProviderRegistration bool
 
 	StopContext context.Context
+
+	// Key Vault
+	keyVault *keyVaultClient
 
 	// Authentication
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
@@ -134,6 +145,18 @@ func getArmClient(authCfg *authentication.Config, tfVersion string, skipProvider
 		return nil, err
 	}
 
+	// The Graph API path used to resolve the authenticated object ID is not
+	// available on every Azure Stack Hub stamp (it can return 403 for the service
+	// principal), so read the `oid` claim from the ARM token instead.
+	if authCfg.AuthenticatedAsAServicePrincipal {
+		objectId, err := authenticatedObjectIdFromAuthorizer(auth)
+		if err != nil {
+			log.Printf("[DEBUG] Unable to determine the authenticated object ID from the token: %+v", err)
+		} else {
+			client.authenticatedObjectId = objectId
+		}
+	}
+
 	// Graph Endpoints
 	graphEndpoint := env.GraphEndpoint
 	graphAuth, err := authCfg.GetAuthorizationToken(sender, oauth, graphEndpoint)
@@ -147,6 +170,12 @@ func getArmClient(authCfg *authentication.Config, tfVersion string, skipProvider
 	client.registerNetworkingClients(endpoint, client.subscriptionId, auth)
 	client.registerResourcesClients(endpoint, client.subscriptionId, auth)
 	client.registerStorageClients(endpoint, client.subscriptionId, auth)
+
+	// The Key Vault data plane authenticates against the vault's own endpoint, which
+	// is only known per-request, so it uses a per-request authorizer callback rather
+	// than a single token for the resource manager audience.
+	keyVaultAuth := authCfg.BearerAuthorizerCallback(sender, oauth)
+	client.registerKeyVaultClients(endpoint, client.subscriptionId, auth, keyVaultAuth)
 
 	return &client, nil
 }
@@ -270,6 +299,19 @@ func (c *ArmClient) registerStorageClients(endpoint, subscriptionId string, auth
 	c.storageServiceClient = accountsClient
 }
 
+func (c *ArmClient) registerKeyVaultClients(endpoint, subscriptionId string, auth, keyVaultAuth autorest.Authorizer) {
+	vaultsClient := keyvaultmgmt.NewVaultsClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&vaultsClient.Client, auth)
+
+	managementClient := keyvaultdata.New()
+	c.configureClient(&managementClient.Client, keyVaultAuth)
+
+	c.keyVault = &keyVaultClient{
+		VaultsClient:     &vaultsClient,
+		ManagementClient: &managementClient,
+	}
+}
+
 var (
 	storageKeyCacheMu sync.RWMutex
 	storageKeyCache   = make(map[string]string)
@@ -337,4 +379,44 @@ func (armClient *ArmClient) getBlobStorageClientForStorageAccount(ctx context.Co
 
 	blobClient := storageClient.GetBlobService()
 	return &blobClient, true, nil
+}
+
+// authenticatedObjectIdFromAuthorizer reads the `oid` claim from the ARM access
+// token rather than querying the Graph API, which is restricted on some Azure
+// Stack Hub stamps.
+func authenticatedObjectIdFromAuthorizer(auth autorest.Authorizer) (string, error) {
+	bearer, ok := auth.(*autorest.BearerAuthorizer)
+	if !ok {
+		return "", fmt.Errorf("authorizer is not a bearer authorizer")
+	}
+
+	tokenProvider := bearer.TokenProvider()
+	if spt, ok := tokenProvider.(*adal.ServicePrincipalToken); ok {
+		if err := spt.EnsureFresh(); err != nil {
+			return "", fmt.Errorf("refreshing token: %+v", err)
+		}
+	}
+
+	return objectIdFromJWT(tokenProvider.OAuthToken())
+}
+
+func objectIdFromJWT(token string) (string, error) {
+	segments := strings.Split(token, ".")
+	if len(segments) < 2 {
+		return "", fmt.Errorf("token is not a JWT")
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(segments[1])
+	if err != nil {
+		return "", fmt.Errorf("decoding token payload: %+v", err)
+	}
+
+	var claims struct {
+		ObjectId string `json:"oid"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return "", fmt.Errorf("unmarshaling token claims: %+v", err)
+	}
+
+	return claims.ObjectId, nil
 }

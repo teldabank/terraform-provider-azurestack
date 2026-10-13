@@ -1,3 +1,26 @@
+## 0.11.1 (Unreleased)
+
+BUG FIXES:
+
+* `azurestack_client_config`: resolve `service_principal_object_id` from the ARM token's `oid` claim instead of the Graph API, which returns 403 for the Terraform service principal on this Azure Stack Hub stamp. This makes the data source usable for building Key Vault access policies.
+
+## 0.11.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azurestack_key_vault`
+* **New Resource:** `azurestack_key_vault_access_policy`
+* **New Resource:** `azurestack_key_vault_key`
+* **New Resource:** `azurestack_key_vault_secret`
+* **New Data Source:** `azurestack_key_vault`
+* **New Data Source:** `azurestack_key_vault_access_policy`
+* **New Data Source:** `azurestack_key_vault_key`
+* **New Data Source:** `azurestack_key_vault_secret`
+
+IMPROVEMENTS:
+
+* dependencies: upgrading `github.com/Azure/azure-sdk-for-go` to `v44.0.0` and `github.com/Azure/go-autorest/autorest` to `0.11.29`
+
 ## 0.10.0 (April 27, 2021)
 
 NOTES:

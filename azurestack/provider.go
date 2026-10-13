@@ -73,6 +73,10 @@ func Provider() terraform.ResourceProvider {
 
 		DataSourcesMap: map[string]*schema.Resource{
 			"azurestack_client_config":           dataSourceArmClientConfig(),
+			"azurestack_key_vault":               keyVaultDataSource(),
+			"azurestack_key_vault_access_policy": keyVaultAccessPolicyDataSource(),
+			"azurestack_key_vault_key":           keyVaultKeyDataSource(),
+			"azurestack_key_vault_secret":        keyVaultSecretDataSource(),
 			"azurestack_network_interface":       dataSourceArmNetworkInterface(),
 			"azurestack_network_security_group":  dataSourceArmNetworkSecurityGroup(),
 			"azurestack_platform_image":          dataSourceArmPlatformImage(),
@@ -88,6 +92,10 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"azurestack_availability_set":                   resourceArmAvailabilitySet(),
 			"azurestack_dns_zone":                           resourceArmDnsZone(),
+			"azurestack_key_vault":                          keyVault(),
+			"azurestack_key_vault_access_policy":            keyVaultAccessPolicy(),
+			"azurestack_key_vault_key":                      keyVaultKey(),
+			"azurestack_key_vault_secret":                   keyVaultSecret(),
 			"azurestack_dns_a_record":                       resourceArmDnsARecord(),
 			"azurestack_network_interface":                  resourceArmNetworkInterface(),
 			"azurestack_network_security_group":             resourceArmNetworkSecurityGroup(),
