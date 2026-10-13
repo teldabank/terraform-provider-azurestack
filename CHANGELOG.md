@@ -1,3 +1,9 @@
+## 0.11.1 (Unreleased)
+
+BUG FIXES:
+
+* `azurestack_client_config`: resolve `service_principal_object_id` from the ARM token's `oid` claim instead of the Graph API, which returns 403 for the Terraform service principal on this Azure Stack Hub stamp. This makes the data source usable for building Key Vault access policies.
+
 ## 0.11.0 (Unreleased)
 
 FEATURES:
