@@ -2,7 +2,6 @@
 subcategory: "Authentication"
 layout: "azurestack"
 page_title: "Authenticating via a Service Principal using a Client Secret"
-sidebar_current: "docs-azurestack-auth-service-principal-client-secret"
 description: |-
   This guide explains how to use a Service Principal and a Client Secret to authenticate with the Azure Stack Provider.
 
@@ -56,7 +55,7 @@ As we've obtained the credentials for this Service Principal - it's possible to 
 When storing the credentials as Environment Variables, for example:
 
 ```bash
-$ export ARM_ENDPOINT="00000000-0000-0000-0000-000000000000"
+$ export ARM_METADATA_HOST="my.stack.instance.ca"
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
 $ export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
@@ -68,7 +67,7 @@ The following Provider block can be specified - where `0.5.0` is the version of 
 ```
 provider "azurestack" {
   # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.5.0"
+  version = "=1.0.0"
 }
 ```
 
@@ -85,9 +84,9 @@ variable "client_secret" {}
 
 provider "azurestack" {
   # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.5.0"
+  version = "=1.0.0"
 
-  arm_endpoint    = "https://management.region.myazurestack.com"
+  metadata_host   = "https://management.region.myazurestack.com"
   subscription_id = "00000000-0000-0000-0000-000000000000"
   client_id       = "00000000-0000-0000-0000-000000000000"
   client_secret   = "${var.client_secret}"

@@ -2,7 +2,6 @@
 subcategory: "Authentication"
 layout: "azurestack"
 page_title: "Authenticating using the Azure CLI"
-sidebar_current: "docs-azurestack-auth-service-principal-azure-cli"
 description: |-
   This guide explains how to authenticate using the Azure CLI with the Azure Stack Provider.
 
@@ -99,7 +98,7 @@ When authenticating using the Azure CLI most of the details required can be infe
 ```
 provider "azurestack" {
   # whilst the version attribute is optional, we recommend pinning the Provider version being used
-  version = "=0.5.0"
+  version = "=1.0.0"
 }
 ```
 
@@ -108,7 +107,7 @@ If you're using multiple subscriptions (or have access to multiple tenants) - it
 ```
 provider "azurestack" {
   # whilst the version attribute is optional, we recommend pinning the Provider version being used
-  version         = "=0.5.0"
+  version         = "=1.0.0"
   subscription_id = "00000000-0000-0000-0000-000000000000"
 }
 ```

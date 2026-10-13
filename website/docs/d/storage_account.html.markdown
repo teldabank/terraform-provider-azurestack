@@ -1,8 +1,7 @@
 ---
-subcategory: ""
+subcategory: "Storage"
 layout: "azurestack"
 page_title: "Azure Resource Manager: azurestack_storage_account"
-sidebar_current: "docs-azurestack-datasource-storage-account"
 description: |-
   Get information about the specified Storage Account.
 ---
@@ -43,15 +42,14 @@ output "storage_account_tier" {
 
 * `account_replication_type` - Defines the type of replication used for this storage account.
 
-* `access_tier` - (Required for `BlobStorage` accounts) Defines the access tier
-    for `BlobStorage` accounts. Valid options are `Hot` and `Cold`, defaults to
-    `Hot`. - **`Currently Not Supported on Azure Stack`**
-
 * `account_encryption_source` - The Encryption Source for this Storage Account.
 
 * `custom_domain` - A `custom_domain` block as documented below.
 
 * `tags` - A mapping of tags to assigned to the resource.
+
+* `enable_https_traffic_only` - Is traffic only allowed via HTTPS? See [here](https://docs.microsoft.com/en-us/azure/storage/storage-require-secure-transfer/)
+  for more information.
 
 * `primary_location` - The primary location of the Storage Account.
 

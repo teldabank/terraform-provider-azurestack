@@ -1,7 +1,6 @@
 ---
 layout: "azurestack"
 page_title: "Provider: Azure Stack"
-sidebar_current: "docs-azurestack-index"
 description: |-
   The Azure Stack Provider is used to manage resources in Azure Stack via the Azure Resource Manager API's.
 
@@ -60,7 +59,11 @@ resource "azurestack_virtual_network" "test" {
 
 The following arguments are supported:
 
-* `arm_endpoint` - (Optional) The Azure Resource Manager Endpoint for your Azure Stack instance, for example `https://management.westus.mydomain.com`. This can also be sourceed from the `ARM_ENDPOINT` Environment Variable.
+* `metadata_host` - (Required) The Hostname of the Azure Metadata Service, used to obtain the Cloud Environment. Often the same as the Azure Resource Manager Endpoint for your Azure Stack instance, for example `https://management.westus.mydomain.ca`. This can also be sourced from the `ARM_METADATA_HOST` Environment Variable.
+
+-> Note: The `arm_endpoint` property, and corresponding environment variable `ARM_ENDPOINT`, have been replaced by `metadata_host` and `ARM_METADATA_HOST` respectively. In many installations the value of this property will remain the same.
+
+* `environment` - (Optional) The Cloud Environment which should be used. Only required when multiple environments are supported for your Azure Stack Instance.
 
 * `client_id` - (Optional) The Client ID which should be used. This can also be sourceed from the `ARM_CLIENT_ID` Environment Variable.
 
@@ -94,15 +97,6 @@ For some advanced scenarios, such as where more granular permissions are necessa
 
 * `skip_provider_registration` - (Optional) Should the Azure Stack Provider skip registering any required Resource Providers? This can also be sourced from the `ARM_SKIP_PROVIDER_REGISTRATION` Environment Variable. Defaults to `false`.
 
-## Testing
+## Features
 
-The following Environment Variables must be set to run the acceptance tests:
-
-~> **NOTE:** The Acceptance Tests require the use of a Service Principal using a Client Secret.
-
-* `ARM_ENDPOINT` - The Azure Resource Manager API Endpoint for Azure Stack.
-* `ARM_SUBSCRIPTION_ID` - The ID of the Azure Subscription in which to run the Acceptance Tests.
-* `ARM_CLIENT_ID` - The Client ID of the Service Principal.
-* `ARM_CLIENT_SECRET` - The Client Secret associated with the Service Principal.
-* `ARM_TENANT_ID` - The Tenant ID to use.
-* `ARM_TEST_LOCATION` - The Azure Stack Location to provision resources in for the Acceptance Tests.
+The `features` block allows configuring the behaviour of the Azure Provider, more information can be found on [the dedicated page for the `features` block](guides/features-block.html).

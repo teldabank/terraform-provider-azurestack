@@ -1,8 +1,7 @@
 ---
-subcategory: ""
+subcategory: "Network"
 layout: "azurestack"
 page_title: "Azure Resource Manager: azurestack_subnet"
-sidebar_current: "docs-azurestack-datasource-subnet"
 description: |-
   Get information about the specified Subnet located within a Virtual Network.
 ---
@@ -37,4 +36,3 @@ output "subnet_id" {
 * `address_prefix` - The address prefix used for the subnet.
 * `network_security_group_id` - The ID of the Network Security Group associated with the subnet.
 * `route_table_id` - The ID of the Route Table associated with this subnet.
-* `ip_configurations` - The collection of IP Configurations with IPs within this subnet.

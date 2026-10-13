@@ -2,7 +2,6 @@
 subcategory: "Storage"
 layout: "azurestack"
 page_title: "Azure Resource Manager: azurestack_storage_account"
-sidebar_current: "docs-azurestack-resource-storage-account"
 description: |-
   Manages a Azure Storage Account.
 ---
@@ -54,15 +53,14 @@ The following arguments are supported:
 
 * `account_replication_type` - (Required) Defines the type of replication to use for this storage account. Valid option is `LRS` currently as per [Azure Stack Storage Differences](https://docs.microsoft.com/en-us/azure/azure-stack/user/azure-stack-acs-differences)
 
-* `access_tier` - (Required for `BlobStorage` accounts) Defines the access tier
-    for `BlobStorage` accounts. Valid options are `Hot` and `Cold`, defaults to
-    `Hot`. - **`Currently Not Supported on Azure Stack`**
-
 * `account_encryption_source` - (Optional) The Encryption Source for this Storage Account. Possible values are `Microsoft.Keyvault` and `Microsoft.Storage`. Defaults to `Microsoft.Storage`.
 
 * `custom_domain` - (Optional) A `custom_domain` block as documented below.
 
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `enable_https_traffic_only` - (Optional) Boolean flag which forces HTTPS if enabled, see [here](https://docs.microsoft.com/en-us/azure/storage/storage-require-secure-transfer/)
+  for more information. Defaults to `true`.
+
+* `tags` - (Optional) A mapping of tags to assign to the resource.\
 
 ---
 
